@@ -16,7 +16,17 @@ Since this guide is using ROS Jazzy, you will need to install `Ubuntu 24.04.3 LT
 #### 1. On the Kobuki
 1. Download [`RaspberryPi Imager`](https://www.raspberrypi.com/software/)
 2. Select `The Ubuntu server LTS 64-bit` image.
-3. 
+3. Use the
+  [***super secret menu***](https://www.clustered-pi.com/blog/raspberry-pi-imager-secret-menu.html)
+  to configure the WIFI and SSH access.
+4. Flash the image
+5. Insert the SD card into the PI and power it up!
+
+  **A note on SSH:**
+      I highly recommend using SSH to configure the RaspberryPI you'll be using to
+      control the Kobuki.
+      If you're not famillilar with SSH and how to set it up, a useful article can be
+      found [here](https://www.digitalocean.com/community/tutorials/ssh-essentials-working-with-ssh-servers-clients-and-keys).
 
 #### 2. Setting up another machine
 You will need another machine for ROS capabilities which the RaspberryPI is not
@@ -45,16 +55,9 @@ You have 4 options for this (ordered from simplest and easiest to hardest and mo
   - If you're running Windows, you can experiment using the Windows Subsystem
   for Linux, but I have no idea how well it will work for this use case.
 
-## 2. Setting up SSH on the RaspberryPI (Kobuki)
-I highly recommend using SSH to configure the RaspberryPI you'll be using to
-control the Kobuki.
-
-If you're not famillilar with SSH and how to set it up, a useful article can be
-found here: https://www.digitalocean.com/community/tutorials/ssh-essentials-working-with-ssh-servers-clients-and-keys
-
 *Or, of course, you could simply bully ChatGPT to help you set it up*
 
-## 3. Installing ROS2
+## 2. Installing ROS2
 
 ### 1. On the Kobuki:
 
@@ -112,7 +115,7 @@ LINE='source /opt/ros/jazzy/setup.bash'
 grep -qxF "$LINE" ~/.bashrc || echo "$LINE" >> ~/.bashrc
 ```
 
-## 4. Testing the base ROS2 installation and communication
+## 3. Testing the base ROS2 installation and communication
 Ensure both machines are connected to the same network.
 
 On the Kobuki run:
@@ -131,7 +134,7 @@ If everything is set up and working correctly, you will see the Kobuki
 transmitting "Hello World" messages and the Desktop machine succesfully
 receiving them.
 
-## 5. Installing ROS2 packages on the Kobuki
+## 4. Installing the Kobuki packages on ROS2
 
 Install a `udev` rule for the Kobuki, so it always appears as `/dev/kobuki` when
 connected to the RaspberryPI (instead of `/dev/ttyUSBx`).
@@ -142,7 +145,7 @@ sudo service udev reload
 sudo service udev restart
 ```
 
-The Kobuki ROS packages are not available the on ROS Jazzy repos, as such, we
+The Kobuki ROS packages are not available on the ROS Jazzy repos, as such, we
 will have to build them from source.
 
 The packages depend on ECL, however, a few of the required ones are/were
@@ -196,7 +199,7 @@ source ~/kobuki/install/setup.bash
 **TIP**: Add this command to your [`.bashrc`](https://www.digitalocean.com/community/tutorials/bashrc-file-in-linux)
 
 If everything built correctly, try connecting the Kobuki to the RaspberryPI and
-running to test the Kobuki driver:
+running this command:
 ```
 kobuki-simple-keyop
 ```
@@ -205,23 +208,149 @@ You should be able to control the robot via keyboard input
 *Note: this is only testing the base Kobuki driver, which is communicating
 with the robot directly - not through ROS2*
 
-## 6. Configuring ROS2 to interact with the Kobuki
+## 5. Note on launch files for the Kobuki packages
 
-Many of the original launch files for the Kobuki ROS2 nodes need small to
+As the Kobuki project is no longer maintained,
+many of the original launch files for the Kobuki ROS2 nodes need small to
 moderate ammounts of fixup in order to work properly. As such, commands like:
 ```
 ros2 launch kobuki_random_walker kobuki_random_walker_app.launch
 ```
 are not going to work directly since they're using the original launch files
-(you can edit and fix the original files, but it's better to create new launch
-files)
 
-### 1. Keyboard control
+If you'll want to build more complex behaviour, you'll also need to edit the
+launch files in order to configure packages and connect them together.
 
-Keyboard control via ROS2 will require you to install
+***You should always make a copy of the launch files instead of editing them
+directly***
+
+In every single ROS package you compiled via `colcon`, the launch files will
+be located in
+```
+~/kobuki/install/<package_name>/share/<package_name>/launch
+```
+
+In every single ROS package you install via `apt install`, the launch files will
+be located in
+```
+/opt/ros/jazzy/share/<package_name>/launch
+```
+
+## 6. Configuring keyboard control via ROS2
+
+Keyboard control via ROS2 will require you to install a package for sending
+keyboard commands to ROS2.
+
+```
+sudo apt install -y ros-jazzy-teleop-twist-keyboard
+```
+
+The next steps will require you to launch multiple terminals or use `tmux`
+
+In one terminal run:
+```
+ros2 launch kobuki_node kobuki_node-launch.py
+```
+This connects the Kobuki driver to ROS and exposes various ROS topics for
+controlling the robot and getting information out of it.
+
+You can see these topics by running this command in another terminal
+```
+ros2 topic list
+```
+**Note:** the `kobuki_node` must be running for you to see the topic list.
+
+The output will look something like this:
+```
+<...>
+/commands/controller_info
+/commands/digital_output
+/commands/external_power
+/commands/led1
+/commands/led2
+/commands/motor_power
+/commands/reset_odometry
+/commands/sound
+/commands/velocity
+/controller_info
+/debug/raw_control_command
+/debug/raw_data_command
+/debug/raw_data_stream
+/diagnostics
+/events/bumper
+/events/button
+/events/cliff
+/events/digital_input
+/events/power_system
+/events/robot_state
+/events/wheel_drop
+<...>
+
+```
+
+We are interested in the `/commands/velocity` topic if we want to move the robot.
+
+If you run
+```
+ros2 topic info /commands/velocity
+```
+
+You will see the type of ROS messages it accepts, the number of ROS nodes
+which are publishing to it, and the number of nodes which are subscribed to it.
+
+```
+Type: geometry_msgs/msg/Twist
+Publisher count: 0
+Subscription count: 1
+```
+
+In this case the subscriber is the `kobuki_node` which is listening for
+`geometry_msgs/msg/Twist` messages.
+
+Lets send some of these messages!
 
 
+This command runs another ROS node which will send messages
+to `/commands/velocity` (launch it in another terminal)
+```
+ros2 run teleop_twist_keyboard teleop_twist_keyboard \
+--ros-args --remap cmd_vel:=/commands/velocity
 
+```
 
-## 100. Useful links
+**Note:**
+We use the `--remap cmd_vel:=/commands/velocity` because by default this
+package outputs messages to the `/cmd_vel` topic, but the Kobuki is
+listening on `/commands/velocity`. This redirects the messages to the correct
+destination. It would also be valid to remap the kobuki_node's input from
+`/commands/velocity` to `/cmd_vel` - it would also serve the same purpose.
+
+Once you've launched the keyboard node, try moving the robot.
+
+You can observe what values the are sent to `/commands/velocity` by calling this
+command in another terminal.
+```
+ros2 topic echo /commands/velocity
+```
+
+If you're using the recommended 2 machine setup and the other machine is
+connected to the same network as the Kobuki and ROS2 is installed correctly,
+you can control the Robot from the other machine!
+
+Simply run ONLY the `kobuki_node` on the Kobuki, and
+ONLY the `teleop_twist_node` on the other machine.
+
+## 7. Setting up LIDAR, SLAM and using RVIZ
+
+## 8. Muxing inputs
+
+## 9. Bringing up the Nav2 stack
+
+## 10. Connecting an Xbox controller
+
+## 11. Useful links
+https://docs.nav2.org/setup_guides/index.html
+https://wiki.ros.org/kobuki/Tutorials/Kobuki's%20Control%20System
+https://idorobotics.com/2024/02/20/ros2-on-kobuki-turtlebot/
 https://kobuki.readthedocs.io/en/devel/software.html
+https://wiki.ros.org/yocs_velocity_smoother/indigo
