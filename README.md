@@ -1,10 +1,11 @@
-<!---
+---
 title: "Yujin Kobuki ROS2 setup documentation"
-author: "Ugnius Stašaitis\nugnius@dev.stasaitis.me"
+author: "Ugnius Stašaitis\tugnius@dev.stasaitis.me"
 date: "2026-01-10"
 toc: true
 geometry: margin=1in
---->
+urlcolor: cyan
+---
 
 
 ## Short description
@@ -13,6 +14,15 @@ This document covers installing and setting up ROS2 on a RaspberryPI
 It also covers acquiring, compiling and configuring ROS2 packages for
 the Kobuki which allow the robot to be teleoperated and/or controlled via a
 lidar-powered navigation stack.
+
+## GitHub repos
+This document is also available on github in a more copy-paste friendly form:
+
+<https://github.com/kobuki-ktu/docs>
+
+The `kobuki-ktu` GitHub also contains all the forked repos used in
+this document. All the repos have patches applied in order
+to work out-of-the-box at time time of writing.
 
 ## 1. Setting up the base system(s)
 
@@ -65,14 +75,14 @@ You have 4 options for this (ordered from simplest and easiest to hardest and mo
 
 ### 1. On the Kobuki:
 
-```
+```bash
 wget https://raw.githubusercontent.com/kobuki-ktu/utils/master/install_ros2_kobuki.sh
 bash install_ros2_kobuki.sh
 ```
 
 ### 2. On the Desktop
 
-```
+```bash
 wget https://raw.githubusercontent.com/kobuki-ktu/utils/master/install_ros2_desktop.sh
 bash install_ros2_desktop.sh
 ```
@@ -82,13 +92,13 @@ Ensure both machines are connected to the same network.
 
 On the Kobuki run:
 
-```
+```bash
 ros2 run demo_nodes_cpp talker
 ```
 
 On the Desktop run:
 
-```
+```bash
 ros2 run demo_nodes_cpp listener
 ```
 
@@ -100,7 +110,7 @@ receiving them.
 
 Install a `udev` rule for the Kobuki, so it always appears as `/dev/kobuki` when
 connected to the RaspberryPI (instead of `/dev/ttyUSBx`).
-```
+```bash
 wget https://raw.githubusercontent.com/kobuki-ktu/kobuki_ftdi/devel/60-kobuki.rules
 sudo cp 60-kobuki.rules /etc/udev/rules.d
 sudo service udev reload
@@ -116,7 +126,7 @@ unavailable on the ROS jazzy repos, so we must also build them from source.
 The Kobuki and ECL source code is available on my GitHub fork.
 The fork also has a few patches applied, since the original ECL code
 needs a few small fixes in order to compile on current C++ compilers.
-```
+```bash
 mkdir -p ~/kobuki/src
 cd ~/kobuki
 
@@ -141,7 +151,7 @@ Or even one by one:
 `colcon build --packages-select-regex ecl_time`
 
 If ECL was compiled succesfully, we can now compile the Kobuki packages:
-```
+```bash
 mkdir -p ~/kobuki/src
 cd ~/kobuki
 
@@ -159,14 +169,14 @@ colcon build
 
 After installing the packages, you will need to activate your ROS2 overlay
 (environment) each time you want to use these packages:
-```
+```bash
 source ~/kobuki/install/setup.bash
 ```
 **TIP**: Add this command to your [`.bashrc`](https://www.digitalocean.com/community/tutorials/bashrc-file-in-linux)
 
 If everything built correctly, try connecting the Kobuki to the RaspberryPI and
 running this command:
-```
+```bash
 kobuki-simple-keyop
 ```
 You should be able to control the robot via keyboard input
@@ -179,7 +189,7 @@ with the robot directly - not through ROS2*
 As the Kobuki project is no longer maintained,
 many of the original launch files for the Kobuki ROS2 nodes need small to
 moderate ammounts of fixup in order to work properly. As such, commands like:
-```
+```bash
 ros2 launch kobuki_random_walker kobuki_random_walker_app.launch
 ```
 are not going to work directly since they're using the original launch files
@@ -192,13 +202,13 @@ directly***
 
 In every single ROS package you compiled via `colcon`, the launch files will
 be located in
-```
+```bash
 ~/kobuki/install/<package_name>/share/<package_name>/launch
 ```
 
 In every single ROS package you install via `apt install`, the launch files will
 be located in
-```
+```bash
 /opt/ros/jazzy/share/<package_name>/launch
 ```
 
@@ -207,21 +217,21 @@ be located in
 Keyboard control via ROS2 will require you to install a package for sending
 keyboard commands to ROS2.
 
-```
+```bash
 sudo apt install -y ros-jazzy-teleop-twist-keyboard
 ```
 
 The next steps will require you to launch multiple terminals or use `tmux`
 
 In one terminal run:
-```
+```bash
 ros2 launch kobuki_node kobuki_node-launch.py
 ```
 This connects the Kobuki driver to ROS and exposes various ROS topics for
 controlling the robot and getting information out of it.
 
 You can see these topics by running this command in another terminal
-```
+```bash
 ros2 topic list
 ```
 **Note:** the `kobuki_node` must be running for you to see the topic list.
@@ -257,7 +267,7 @@ The output will look something like this:
 We are interested in the `/commands/velocity` topic if we want to move the robot.
 
 If you run
-```
+```bash
 ros2 topic info /commands/velocity
 ```
 
@@ -278,7 +288,7 @@ Lets send some of these messages!
 
 This command runs another ROS node which will send messages
 to `/commands/velocity` (launch it in another terminal)
-```
+```bash
 ros2 run teleop_twist_keyboard teleop_twist_keyboard \
 --ros-args --remap cmd_vel:=/commands/velocity
 
@@ -295,7 +305,7 @@ Once you've launched the keyboard node, try moving the robot.
 
 You can observe what values the are sent to `/commands/velocity` by calling this
 command in another terminal.
-```
+```bash
 ros2 topic echo /commands/velocity
 ```
 
@@ -321,12 +331,12 @@ For this we are going to use 2 packages:
 `rpilidar_ros` and `slam_toolbox`
 
 `slam toolbox` can be simply installed via:
-```
+```bash
 sudo apt install -y ros-jazzy-slam-toolbox
 ```
 
 `rpi-lidar`, however, will have to be compiled from source:
-```
+```bash
 git clone https://github.com/kobuki-ktu/rplidar_ros2.git ~/kobuki/src/rpilidar_ros2
 
 `colcon build --packages-select-regex rpilidar`
@@ -341,7 +351,7 @@ where everything is located in relation to each other physically on the robot.
 Many ROS packages rely on this information to function properly.
 
 In order to launcn the `robot_state_publisher` we must first create a launch file:
-```
+```python
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition, UnlessCondition
@@ -373,12 +383,12 @@ You can read more about
 URDF [here](https://articulatedrobotics.xyz/tutorials/ready-for-ros/urdf/).
 
 Before you launch the file you must also install the `xacro` tool:
-```
+```bash
 sudo apt install -y ros-jazzy-xacro
 ```
 
 Once you save the above file to disk, you can launch it like this:
-```
+```bash
 ros2 launch robot_state_publisher.py.launch
 ```
 (In this case the file was saved under the name `robot_state_publisher.py.launch`)
@@ -391,14 +401,14 @@ via transforms to the physical robot.
 
 To to this, we add a manual transform, which sets the location of the lidar module's
 coordinate reference frame to be inside the robot.
-```
+```bash
 ros2 run tf2_ros static_transform_publisher 0 0 0 0 0 0 base_link laser
 ```
 
 This links the `laser` frame to the `base_link` frame.
 
 You can view the entire transform tree by running
-```
+```bash
 ros2 run tf2_tools view_frames
 ```
 This generates a pdf with a view of all the transforms. Your transform tree
@@ -413,7 +423,7 @@ If everything was compiled, installed and configured successfuly, we can try
 and launch the nodes:
 
 The LIDAR node can be launched via:
-```
+```bash
 ros2 launch rplidar_ros rplidar.launch.py
 ```
 It publishes data to the `/scan` topic.
@@ -422,7 +432,7 @@ It publishes data to the `/scan` topic.
 You may try to plug the LIDAR module into another USB port on the PI if this happens.
 
 To launch `slam_toolbox` run:
-```
+```bash
 ros2 launch slam_toolbox online_sync_launch.py
 ```
 
@@ -449,6 +459,9 @@ launch config file and tune these fields:
 
 ## 8. Smoothing and muxing inputs
 
+The Kobuki's control diagram:
+![NAV-STACK](nav-stack.png){width=80%}
+
 Before we do autonomous navigation it would be a good idea to give ourselves
 a manual control override if the robot tries to do anything stupid.
 
@@ -459,14 +472,11 @@ during acceleration or braking and doesn't cause damage to itself.
 
 This can be achieved using the `kobuki_velocity_smoother` package.
 
-The Kobuki's control diagram:
-![NAV-STACK](nav-stack.png)
-
 ### 1. Cmd_vel_mux setup
 
 This is the launch file for the `cmd_vel_mux` package.
 (Set the params_file path according to your setup)
-```
+```python
 import os
 
 import ament_index_python.packages
@@ -521,7 +531,7 @@ cmd_vel_mux:
 
 This is the launch file for the velocity smoother(s) (set the params file(s)
 locations based on your own setup):
-```
+```python
 import os
 
 import ament_index_python.packages
@@ -628,7 +638,7 @@ You can read more about the different settings [here](https://docs.ros.org/en/hu
 `kobuki_node` launch file to listen on `cmd_vel` instead of `commands/velocity`.
 
 This can be achieved via the following launch file:
-```
+```python
 import os
 
 import ament_index_python.packages
@@ -664,7 +674,7 @@ def generate_launch_description():
 
 First of all, install the Nav2 packages:
 
-```
+```bash
 sudo apt install ros-jazzy-navigation2
 sudo apt install ros-jazzy-nav2-bringup
 ```
@@ -673,7 +683,7 @@ If you set up the Robot state publisher, LIDAR and SLAM correctly, Nav2 should
 in theory, just work.
 However, if you set up the velocity smoothers and muxer, you'll probably need to
 remap some of he topics where velocity commands are sent.
-```
+```bash
 ros2 launch navigation_launch.py
 ```
 
@@ -684,7 +694,7 @@ target location simply by sending a goal pose message through the Rviz UI.
 ## 10. Connecting an Xbox controller
 
 Install `teleop_twist_joy`:
-```
+```bash
 sudo apt install -y ros-jazzy-teleop-twist-joy
 ```
 
@@ -694,18 +704,18 @@ how to pair a bluetooth device via the commandline on an RPI can be found
 
 A useful package for testing if a controller is working correctly and identifying
 it's button and axis codes is `joystick`
-```
+```bash
 sudo apt install -y joystick
 ```
 
 Launch it via to test your controller:
-```
+```bash
 jstest /dev/input/js0
 ```
 Create a config file for your controller or use one of the packaged presets.
 This is example is using an xbox controller's preset:
 
-```
+```bash
 ros2 launch teleop_twist_joy teleop-launch.py joy_config:='xbox' \
     joy_vel:='cmd_vel_raw/joystick' 
 
@@ -713,8 +723,12 @@ ros2 launch teleop_twist_joy teleop-launch.py joy_config:='xbox' \
 
 ## 11. Useful links
 
-[Nav2 docs](https://docs.nav2.org/setup_guides/index.html)
-[Kobuki control info](https://wiki.ros.org/kobuki/Tutorials/Kobuki's%20Control%20System)
-[Kobuki Ros2 porting guide](https://idorobotics.com/2024/02/20/ros2-on-kobuki-turtlebot/)
-[Original (outdated) kobuki docs](https://kobuki.readthedocs.io/en/devel/software.html)
-[Kokuki velocity smoother docs](https://wiki.ros.org/yocs_velocity_smoother/indigo)
+Nav2 docs: <https://docs.nav2.org/setup_guides/index.html>
+
+Kobuki control info: <https://wiki.ros.org/kobuki/Tutorials/Kobuki's%20Control%20System>
+
+Kobuki Ros2 porting guide: <https://idorobotics.com/2024/02/20/ros2-on-kobuki-turtlebot/>
+
+Original (outdated) kobuki docs: <https://kobuki.readthedocs.io/en/devel/software.html>
+
+Kokuki velocity smoother docs: <https://wiki.ros.org/yocs_velocity_smoother/indigo>
