@@ -1,36 +1,13 @@
-# Yujin Kobuki ROS2 setup documentation
-
-Author: Ugnius Stašaitis
-
-# Table of contents 
-
-- Short Description
-- Base System Setup
-  - Installing Ubuntu
-    - Kobuki Raspberry Pi
-    - Secondary Machine Setup
-- Installing ROS2
-  - ROS2 on the Kobuki
-  - ROS2 on the Desktop
-- Testing ROS2 Communication
-- Installing Kobuki Packages on ROS2
-- Launch Files Notes for Kobuki Packages
-- Keyboard Control via ROS2
-- LIDAR SLAM and RViz Setup
-  - Required Packages
-  - Robot State Publisher
-  - LIDAR Frame Linking
-  - Launching Core Nodes
-  - Using RViz2
-- Velocity Smoothing and Input Muxing
-  - Cmd Vel Mux Configuration
-  - Velocity Smoother Configuration
-- Nav2 Navigation Stack
-- Xbox Controller Setup
-- Useful Links
+---
+title: "Yujin Kobuki ROS2 setup documentation"
+author: "Ugnius Stašaitis\nugnius@dev.stasaitis.me"
+date: "2026-01-10"
+toc: true
+geometry: margin=1in
+---
 
 
-# Short description
+## Short description
 This document covers installing and setting up ROS2 on a RaspberryPI
 (the Kobuki robot) and a more powerful desktop PC/VM/Distrobox machine.
 It also covers acquiring, compiling and configuring ROS2 packages for
@@ -89,57 +66,15 @@ You have 4 options for this (ordered from simplest and easiest to hardest and mo
 ### 1. On the Kobuki:
 
 ```
-sudo apt -y update && sudo apt -y install locales
-sudo locale-gen en_US en_US.UTF-8
-sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
-export LANG=en_US.UTF-8
-
-sudo apt -y install software-properties-common
-sudo add-apt-repository -y universe
-
-sudo apt -y update && sudo apt -y install curl -y
-export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')
-curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo ${UBUNTU_CODENAME:-${VERSION_CODENAME}})_all.deb"
-sudo dpkg -i /tmp/ros2-apt-source.deb
-
-sudo apt -y update
-sudo apt -y upgrade
-
-sudo apt -y install ros-dev-tools
-sudo apt -y install ros-jazzy-ros-base
-
-sudo apt -y install ros-jazzy-demo-nodes-cpp
-
-source /opt/ros/jazzy/setup.bash
-LINE='source /opt/ros/jazzy/setup.bash'
-grep -qxF "$LINE" ~/.bashrc || echo "$LINE" >> ~/.bashrc
+wget https://raw.githubusercontent.com/kobuki-ktu/utils/master/install_ros2_kobuki.sh
+bash install_ros2_kobuki.sh
 ```
 
 ### 2. On the Desktop
 
 ```
-sudo apt -y update && sudo apt -y install locales
-sudo locale-gen en_US en_US.UTF-8
-sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
-export LANG=en_US.UTF-8
-
-sudo apt -y install software-properties-common
-sudo add-apt-repository -y universe
-
-sudo apt -y update && sudo apt -y install curl -y
-export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')
-curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo ${UBUNTU_CODENAME:-${VERSION_CODENAME}})_all.deb"
-sudo dpkg -i /tmp/ros2-apt-source.deb
-
-sudo apt -y update
-sudo apt -y upgrade
-
-sudo apt -y install ros-dev-tools
-sudo apt -y install ros-jazzy-ros-desktop
-
-source /opt/ros/jazzy/setup.bash
-LINE='source /opt/ros/jazzy/setup.bash'
-grep -qxF "$LINE" ~/.bashrc || echo "$LINE" >> ~/.bashrc
+wget https://raw.githubusercontent.com/kobuki-ktu/utils/master/install_ros2_desktop.sh
+bash install_ros2_desktop.sh
 ```
 
 ## 3. Testing the base ROS2 installation and communication
@@ -519,7 +454,7 @@ during acceleration or braking and doesn't cause damage to itself.
 
 This can be achieved using the `kobuki_velocity_smoother` package.
 
-Diagram for the Kobuki's navigation stack:
+The Kobuki's control diagram:
 ![NAV-STACK](nav-stack.png)
 
 ### 1. Cmd_vel_mux setup
@@ -765,12 +700,8 @@ ros2 launch teleop_twist_joy teleop-launch.py joy_config:='xbox' joy_vel:='cmd_v
 
 ## 11. Useful links
 
-https://docs.nav2.org/setup_guides/index.html
-
-https://wiki.ros.org/kobuki/Tutorials/Kobuki's%20Control%20System
-
-https://idorobotics.com/2024/02/20/ros2-on-kobuki-turtlebot/
-
-https://kobuki.readthedocs.io/en/devel/software.html
-
-https://wiki.ros.org/yocs_velocity_smoother/indigo
+[](https://docs.nav2.org/setup_guides/index.html)
+[](https://wiki.ros.org/kobuki/Tutorials/Kobuki's%20Control%20System)
+[](https://idorobotics.com/2024/02/20/ros2-on-kobuki-turtlebot/)
+[](https://kobuki.readthedocs.io/en/devel/software.html)
+[](https://wiki.ros.org/yocs_velocity_smoother/indigo)
