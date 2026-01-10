@@ -1,10 +1,10 @@
----
+<!---
 title: "Yujin Kobuki ROS2 setup documentation"
 author: "Ugnius Stašaitis\nugnius@dev.stasaitis.me"
 date: "2026-01-10"
 toc: true
 geometry: margin=1in
----
+--->
 
 
 ## Short description
@@ -145,10 +145,14 @@ If ECL was compiled succesfully, we can now compile the Kobuki packages:
 mkdir -p ~/kobuki/src
 cd ~/kobuki
 
-git clone https://github.com/kobuki-ktu/kobuki_core.git ~/kobuki/src/kobuki_core
-git clone https://github.com/kobuki-ktu/kobuki_ros_interfaces.git ~/kobuki/src/kobuki_ros_interfaces
-git clone https://github.com/kobuki-ktu/kobuki_ros.git ~/kobuki/src/kobuki_ros
-git clone https://github.com/kobuki-ktu/kobuki_velocity_smoother.git ~/kobuki/src/kobuki_velocity_smoother
+git clone https://github.com/kobuki-ktu/kobuki_core.git \
+    ~/kobuki/src/kobuki_core
+git clone https://github.com/kobuki-ktu/kobuki_ros_interfaces.git \
+    ~/kobuki/src/kobuki_ros_interfaces
+git clone https://github.com/kobuki-ktu/kobuki_ros.git \
+    ~/kobuki/src/kobuki_ros
+git clone https://github.com/kobuki-ktu/kobuki_velocity_smoother.git \
+    ~/kobuki/src/kobuki_velocity_smoother
 
 colcon build
 ```
@@ -356,7 +360,8 @@ def generate_launch_description():
         parameters=[{'robot_description': Command(['xacro ', LaunchConfiguration('model')])}]
     )
     return LaunchDescription([
-        DeclareLaunchArgument(name='model', default_value=default_model_path, description='Absolute path to robot model file'),
+        DeclareLaunchArgument(name='model', default_value=default_model_path,
+        description='Absolute path to robot model file'),
         robot_state_publisher_node,
     ])
 ```
@@ -472,7 +477,8 @@ import yaml
 
 
 def generate_launch_description():
-    share_dir = ament_index_python.packages.get_package_share_directory('cmd_vel_mux')
+    share_dir =
+        ament_index_python.packages.get_package_share_directory('cmd_vel_mux')
     params_file = '/home/pi/launch/kobuki/velocity_mux/cmd_vel_mux_params.yaml'
     with open(params_file, 'r') as f:
         params = yaml.safe_load(f)['cmd_vel_mux']['ros__parameters']
@@ -525,7 +531,8 @@ import launch_ros.actions
 import yaml
 
 def generate_launch_description():
-    params_file_keyop = '/home/pi/launch/kobuki/velocity_smoothers/keyop_velocity_smoother_params.yaml'
+    params_file_keyop =
+    '/home/pi/launch/kobuki/velocity_smoothers/keyop_velocity_smoother_params.yaml'
     with open(params_file_keyop, 'r') as f:
         params = yaml.safe_load(f)['kobuki_velocity_smoother']['ros__parameters']
     velocity_smoother_node_keyop = launch_ros.actions.Node(
@@ -542,7 +549,8 @@ def generate_launch_description():
         parameters=[params])
 
 
-    params_file_navigation = '/home/pi/launch/kobuki/velocity_smoothers/navigation_velocity_smoother_params.yaml'
+    params_file_navigation =
+    '/home/pi/launch/kobuki/velocity_smoothers/navigation_velocity_smoother_params.yaml'
     with open(params_file_navigation, 'r') as f:
         params = yaml.safe_load(f)['kobuki_velocity_smoother']['ros__parameters']
     velocity_smoother_node_navigation = launch_ros.actions.Node(
@@ -559,7 +567,8 @@ def generate_launch_description():
         parameters=[params])
 
 
-    params_file_joystick = '/home/pi/launch/kobuki/velocity_smoothers/joystick_velocity_smoother_params.yaml'
+    params_file_joystick =
+    '/home/pi/launch/kobuki/velocity_smoothers/joystick_velocity_smoother_params.yaml'
     with open(params_file_navigation, 'r') as f:
         params = yaml.safe_load(f)['kobuki_velocity_smoother']['ros__parameters']
     velocity_smoother_node_joystick= launch_ros.actions.Node(
@@ -575,7 +584,10 @@ def generate_launch_description():
         output='both',
         parameters=[params])
 
-    return launch.LaunchDescription([velocity_smoother_node_keyop, velocity_smoother_node_navigation, velocity_smoother_node_joystick])
+    return launch.LaunchDescription(
+        [velocity_smoother_node_keyop,
+         velocity_smoother_node_navigation,
+         velocity_smoother_node_joystick])
 
 ```
 
@@ -694,14 +706,15 @@ Create a config file for your controller or use one of the packaged presets.
 This is example is using an xbox controller's preset:
 
 ```
-ros2 launch teleop_twist_joy teleop-launch.py joy_config:='xbox' joy_vel:='cmd_vel_raw/joystick' 
+ros2 launch teleop_twist_joy teleop-launch.py joy_config:='xbox' \
+    joy_vel:='cmd_vel_raw/joystick' 
 
 ```
 
 ## 11. Useful links
 
-[](https://docs.nav2.org/setup_guides/index.html)
-[](https://wiki.ros.org/kobuki/Tutorials/Kobuki's%20Control%20System)
-[](https://idorobotics.com/2024/02/20/ros2-on-kobuki-turtlebot/)
-[](https://kobuki.readthedocs.io/en/devel/software.html)
-[](https://wiki.ros.org/yocs_velocity_smoother/indigo)
+[Nav2 docs](https://docs.nav2.org/setup_guides/index.html)
+[Kobuki control info](https://wiki.ros.org/kobuki/Tutorials/Kobuki's%20Control%20System)
+[Kobuki Ros2 porting guide](https://idorobotics.com/2024/02/20/ros2-on-kobuki-turtlebot/)
+[Original (outdated) kobuki docs](https://kobuki.readthedocs.io/en/devel/software.html)
+[Kokuki velocity smoother docs](https://wiki.ros.org/yocs_velocity_smoother/indigo)
