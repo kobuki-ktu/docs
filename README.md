@@ -2,6 +2,34 @@
 
 Author: Ugnius Stašaitis
 
+# Table of contents 
+
+- Short Description
+- Base System Setup
+  - Installing Ubuntu
+    - Kobuki Raspberry Pi
+    - Secondary Machine Setup
+- Installing ROS2
+  - ROS2 on the Kobuki
+  - ROS2 on the Desktop
+- Testing ROS2 Communication
+- Installing Kobuki Packages on ROS2
+- Launch Files Notes for Kobuki Packages
+- Keyboard Control via ROS2
+- LIDAR SLAM and RViz Setup
+  - Required Packages
+  - Robot State Publisher
+  - LIDAR Frame Linking
+  - Launching Core Nodes
+  - Using RViz2
+- Velocity Smoothing and Input Muxing
+  - Cmd Vel Mux Configuration
+  - Velocity Smoother Configuration
+- Nav2 Navigation Stack
+- Xbox Controller Setup
+- Useful Links
+
+
 # Short description
 This document covers installing and setting up ROS2 on a RaspberryPI
 (the Kobuki robot) and a more powerful desktop PC/VM/Distrobox machine.
@@ -55,7 +83,6 @@ You have 4 options for this (ordered from simplest and easiest to hardest and mo
   - If you're running Windows, you can experiment using the Windows Subsystem
   for Linux, but I have no idea how well it will work for this use case.
 
-*Or, of course, you could simply bully ChatGPT to help you set it up*
 
 ## 2. Installing ROS2
 
@@ -435,7 +462,9 @@ You can view the entire transform tree by running
 ros2 run tf2_tools view_frames
 ```
 This generates a pdf with a view of all the transforms. Your transform tree
-should look like this if you set everything up correctly.
+should look like this if you set everything up correctly:
+
+![TF-TREE](tf-tree-1.png)
 
 
 ### 4. Launching the nodes
@@ -490,6 +519,8 @@ during acceleration or braking and doesn't cause damage to itself.
 
 This can be achieved using the `kobuki_velocity_smoother` package.
 
+Diagram for the Kobuki's navigation stack:
+![NAV-STACK](nav-stack.png)
 
 ### 1. Cmd_vel_mux setup
 
@@ -684,11 +715,62 @@ def generate_launch_description():
 
 ## 9. Bringing up the Nav2 stack
 
-## 10. Connecting an Xbox controllerr
+First of all, install the Nav2 packages:
+
+```
+sudo apt install ros-jazzy-navigation2
+sudo apt install ros-jazzy-nav2-bringup
+```
+
+If you set up the Robot state publisher, LIDAR and SLAM correctly, Nav2 should
+in theory, just work.
+However, if you set up the velocity smoothers and muxer, you'll probably need to
+remap some of he topics where velocity commands are sent.
+```
+ros2 launch navigation_launch.py
+```
+
+If the topics are wired up correctly, and the navigation stack starts up
+successfully, you can make the robot find a path on the map and move to the
+target location simply by sending a goal pose message through the Rviz UI.
+
+## 10. Connecting an Xbox controller
+
+Install `teleop_twist_joy`:
+```
+sudo apt install -y ros-jazzy-teleop-twist-joy
+```
+
+If you have a bluetooth controller, you'll need to pair it. A useful guide on
+how to pair a bluetooth device via the commandline on an RPI can be found
+[here](https://github.com/orgs/upkie/discussions/138).
+
+A useful package for testing if a controller is working correctly and identifying
+it's button and axis codes is `joystick`
+```
+sudo apt install -y joystick
+```
+
+Launch it via to test your controller:
+```
+jstest /dev/input/js0
+```
+Create a config file for your controller or use one of the packaged presets.
+This is example is using an xbox controller's preset:
+
+```
+ros2 launch teleop_twist_joy teleop-launch.py joy_config:='xbox' joy_vel:='cmd_vel_raw/joystick' 
+
+```
 
 ## 11. Useful links
+
 https://docs.nav2.org/setup_guides/index.html
+
 https://wiki.ros.org/kobuki/Tutorials/Kobuki's%20Control%20System
+
 https://idorobotics.com/2024/02/20/ros2-on-kobuki-turtlebot/
+
 https://kobuki.readthedocs.io/en/devel/software.html
+
 https://wiki.ros.org/yocs_velocity_smoother/indigo
