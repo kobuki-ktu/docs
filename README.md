@@ -682,7 +682,7 @@ sudo apt install ros-jazzy-nav2-bringup
 If you set up the Robot state publisher, LIDAR and SLAM correctly, Nav2 should
 in theory, just work.
 However, if you set up the velocity smoothers and muxer, you'll probably need to
-remap some of he topics where velocity commands are sent.
+remap some of the topics where velocity commands are sent.
 ```bash
 ros2 launch navigation_launch.py
 ```
@@ -690,6 +690,17 @@ ros2 launch navigation_launch.py
 If the topics are wired up correctly, and the navigation stack starts up
 successfully, you can make the robot find a path on the map and move to the
 target location simply by sending a goal pose message through the Rviz UI.
+
+**Note:**
+ You may be better off running the NAV2 stack on your other, more powerful machine.
+If you want to run it locally, you will need to do some changes to Nav2 config files,
+since the RPI4 is not powerful enough to run the system properly on default settings.
+
+In my testing replacing MPPI with DWB in the controller node yielded good results.
+
+You should also probably disable all non-essential nodes, reduce update frequencies,
+increase timeouts.
+
 
 ## 10. Connecting an Xbox controller
 
